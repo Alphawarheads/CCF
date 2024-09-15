@@ -1,25 +1,49 @@
 from web3 import Web3
+import json
+from config.settings import BLOCKCHAIN_URL, CONTRACT_ADDRESS, CONTRACT_ABI_PATH, PRIVATE_KEY
+from config.logger import logger
 
-class BlockchainInterface:
-    def __init__(self, contract_address, abi, node_url):
-        self.web3 = Web3(Web3.HTTPProvider(node_url))
-        self.contract_address = Web3.toChecksumAddress(contract_address)
-        self.contract = self.web3.eth.contract(address=self.contract_address, abi=abi)
+def load_contract():
+    with open(CONTRACT_ABI_PATH, 'r') as abi_file:
+        contract_json = json.load(abi_file)
+        contract_abi = contract_json['abi']  # Adjusted to match Truffle's JSON structure
+    web3 = Web3(Web3.HTTPProvider(BLOCKCHAIN_URL))
+    if not web3.isConnected():
+        logger.error("Failed to connect to the blockchain.")
+        return None, None
+    contract = web3.eth.contract(address=CONTRACT_ADDRESS, abi=contract_abi)
+    return web3, contract
 
-    def authenticate_device(self, device_id, private_key):
-        signed_msg = self.web3.eth.account.sign_message(Web3.soliditySha3(['string'], [device_id]), private_key)
-        return signed_msg
 
-    def submit_energy_data(self, device_id, energy_data, private_key):
-        tx = self.contract.functions.submitEnergyData(device_id, energy_data).buildTransaction({
-            'gas': 2000000,
-            'gasPrice': self.web3.toWei('20', 'gwei'),
-            'nonce': self.web3.eth.getTransactionCount(Web3.toChecksumAddress(device_id)),
+def submit_energy_data(energy_output):
+    try:
+        web3, contract = load_contract()
+        if not web3 or not contract:
+            return
+
+        account = web3.eth.account.privateKeyToAccount(PRIVATE_KEY)
+        nonce = web3.eth.get_transaction_count(account.address)
+
+        # Build transaction
+        tx = contract.functions.submitEnergy(int(energy_output)).build_transaction({
+            'from': account.address,
+            'nonce': nonce,
+            'gas': 6721975,
+            'gasPrice': web3.toWei('1', 'gwei')
         })
-        signed_tx = self.web3.eth.account.signTransaction(tx, private_key)
-        tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
-        return tx_hash
 
-    def get_device_rewards(self, device_id):
-        return self.contract.functions.getRewards(device_id).call()
+        # Sign transaction
+        signed_tx = web3.eth.account.sign_transaction(tx, private_key=PRIVATE_KEY)
+
+        # Send transaction
+        tx_hash = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        logger.info(f"Transaction sent: {tx_hash.hex()}")
+
+        # Wait for transaction receipt
+        receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+        logger.info(f"Transaction receipt: {receipt}")
+
+        return receipt
+    except Exception as e:
+        logger.error(f"Error submitting energy data: {e}")
 

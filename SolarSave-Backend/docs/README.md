@@ -1,11 +1,11 @@
-# SolarSave Python Backend
+# SolarSave Backend
 
-## Overview
-This repository is the backend for SolarSave, simulating IoT devices that track solar energy production and submit the data to a blockchain.
+This is the backend component of the SolarSave project, responsible for simulating IoT devices, processing data, authenticating devices, and interacting with the blockchain.
 
-## Installation
+## Requirements
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/YourRepo/SolarSave.git
+- Python 3.8+
+- Install dependencies:
 
+```bash
+pip install -r docs/requirements.txt

@@ -1,13 +1,18 @@
 import logging
+import sys
+from config.settings import LOG_LEVEL
 
-def setup_logger(name, log_file, level=logging.INFO):
-    handler = logging.FileHandler(log_file)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    handler.setFormatter(formatter)
+# Create a custom logger
+logger = logging.getLogger('SolarSaveLogger')
+logger.setLevel(LOG_LEVEL)
 
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
+# Create handlers
+c_handler = logging.StreamHandler(sys.stdout)
+c_handler.setLevel(LOG_LEVEL)
 
-    return logger
+# Create formatters and add it to handlers
+c_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+c_handler.setFormatter(c_format)
 
+# Add handlers to the logger
+logger.addHandler(c_handler)

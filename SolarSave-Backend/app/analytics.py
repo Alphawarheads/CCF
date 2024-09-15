@@ -1,21 +1,23 @@
-import numpy as np
+import pandas as pd
 from sklearn.linear_model import LinearRegression
+from config.logger import logger
 
-class SolarAnalytics:
-    def __init__(self):
-        self.model = LinearRegression()
+# Placeholder for historical data
+historical_data = pd.DataFrame({
+    'irradiance': [200, 400, 600, 800, 1000],
+    'temperature': [15, 20, 25, 30, 35],
+    'energy_output': [40, 80, 120, 160, 200]
+})
 
-    def train_model(self, historical_data):
-        X = np.array(historical_data['irradiance']).reshape(-1, 1)
-        y = historical_data['energy_output']
-        self.model.fit(X, y)
+def predict_energy_output(current_data):
+    X = historical_data[['irradiance', 'temperature']]
+    y = historical_data['energy_output']
 
-    def predict_energy_output(self, irradiance):
-        return self.model.predict(np.array([[irradiance]]))
+    model = LinearRegression()
+    model.fit(X, y)
 
-    def optimize_usage(self, predicted_output, energy_storage):
-        if predicted_output > energy_storage:
-            return "Use excess energy now or store it in batteries."
-        else:
-            return "Reduce consumption to save energy."
+    prediction = model.predict([[current_data['irradiance'], current_data['temperature']]])
+    predicted_output = prediction[0]
+    logger.debug(f"Predicted energy output: {predicted_output}")
 
+    return predicted_output

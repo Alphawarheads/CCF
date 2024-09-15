@@ -1,19 +1,16 @@
 import unittest
-from app.device_simulation import SolarDeviceSimulator
+from app.device_simulation import simulate_solar_data
 
-class TestSolarDeviceSimulator(unittest.TestCase):
-    def setUp(self):
-        self.device = SolarDeviceSimulator()
+class TestDeviceSimulation(unittest.TestCase):
 
-    def test_generate_solar_irradiance(self):
-        irradiance = self.device.generate_solar_irradiance()
-        self.assertGreaterEqual(irradiance, 0)
-        self.assertLessEqual(irradiance, 1000)
-
-    def test_calculate_energy_output(self):
-        energy_output = self.device.calculate_energy_output()
-        self.assertGreaterEqual(energy_output, 0)
+    def test_simulate_solar_data(self):
+        data = simulate_solar_data()
+        self.assertIn('irradiance', data)
+        self.assertIn('temperature', data)
+        self.assertIn('energy_output', data)
+        self.assertTrue(200 <= data['irradiance'] <= 1000)
+        self.assertTrue(15 <= data['temperature'] <= 35)
+        self.assertTrue(data['energy_output'] > 0)
 
 if __name__ == '__main__':
     unittest.main()
-

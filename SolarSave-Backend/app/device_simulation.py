@@ -1,41 +1,64 @@
-import random
 import time
-import math
+import numpy as np
+import pandas as pd
+from app.auth import authenticate_device
+from app.blockchain import submit_energy_data
+from app.data_processing import process_data
+from app.analytics import predict_energy_output
+from config.logger import logger
 
-class SolarDeviceSimulator:
-    def __init__(self, panel_area=1.6, panel_efficiency=0.2, location="default", noise_factor=0.05):
-        self.panel_area = panel_area
-        self.panel_efficiency = panel_efficiency
-        self.location = location
-        self.noise_factor = noise_factor
+def simulate_solar_data():
+    # Simulate data using basic first principles
+    irradiance = np.random.uniform(200, 1000)  # in W/m^2
+    temperature = np.random.uniform(15, 35)    # in °C
+    # Simplified energy output calculation
+    energy_output = irradiance * 0.2 * (1 - 0.005 * (temperature - 25))
+    data = {
+        'irradiance': irradiance,
+        'temperature': temperature,
+        'energy_output': energy_output
+    }
+    return data
 
-    def generate_solar_irradiance(self):
-        hour = time.localtime().tm_hour
-        max_irradiance = 1000  # Peak irradiance at noon
-        irradiance = max_irradiance * max(0, math.sin((math.pi / 12) * (hour - 6)))
-        irradiance += random.uniform(-self.noise_factor * max_irradiance, self.noise_factor * max_irradiance)
-        return round(irradiance, 2)
+def main():
+    # device_simulation.py
 
-    def generate_temperature(self):
-        base_temp = 25
-        temp_fluctuation = random.uniform(-10, 15)
-        return base_temp + temp_fluctuation
+    import os
+    import argparse
 
-    def calculate_energy_output(self):
-        irradiance = self.generate_solar_irradiance()
-        temperature = self.generate_temperature()
-        temp_coefficient = -0.005
-        temp_effect = max(0, 1 + temp_coefficient * (temperature - 25))
-        energy_output = irradiance * self.panel_area * self.panel_efficiency * temp_effect
-        energy_output += random.uniform(-self.noise_factor * energy_output, self.noise_factor * energy_output)
-        return round(energy_output, 2)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--device_id', type=str, default=os.getenv('DEVICE_ID'))
+    parser.add_argument('--private_key', type=str, default=os.getenv('PRIVATE_KEY'))
+    args = parser.parse_args()
 
-    def get_device_data(self):
-        return {
-            "location": self.location,
-            "irradiance": self.generate_solar_irradiance(),
-            "temperature": self.generate_temperature(),
-            "energy_output": self.calculate_energy_output(),
-            "timestamp": time.time()
-        }
+    # Update settings
+    DEVICE_ID = args.device_id
+    PRIVATE_KEY = args.private_key
 
+    # Authenticate the device
+    if not authenticate_device():
+        logger.error("Device authentication failed.")
+        return
+
+    while True:
+        # Simulate data
+        data = simulate_solar_data()
+        logger.info(f"Simulated Data: {data}")
+
+        # Process data
+        processed_data = process_data(data)
+        logger.info(f"Processed Data: {processed_data}")
+
+        # Predict future energy output
+        prediction = predict_energy_output(processed_data)
+        logger.info(f"Predicted Energy Output: {prediction}")
+
+        # Submit data to blockchain
+        submit_energy_data(processed_data['energy_output'])
+
+        # Wait for the next cycle
+        time.sleep(60)  # Sleep for 1 minute
+
+if __name__ == '__main__':
+    main()

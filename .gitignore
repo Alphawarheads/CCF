@@ -1,0 +1,7 @@
+# 忽略.DS_Store文件
+.DS_Store
+
+# 忽略其他不需要跟踪的文件或文件夹
+node_modules/
+dist/
+tmp/
