@@ -1,6 +1,8 @@
 import logging
+
 import sys
-from config.settings import LOG_LEVEL
+sys.path.append("..")
+from settings import LOG_LEVEL
 
 # Create a custom logger
 logger = logging.getLogger('SolarSaveLogger')
