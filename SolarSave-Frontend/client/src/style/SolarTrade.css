@@ -1,0 +1,105 @@
+.solar-trade-container {
+  display: flex;
+  height: 100%;
+  color: white;
+}
+
+.left-panel {
+  width: 40%;
+  background-color: #1a1a2e;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.back-button {
+  align-self: flex-start;
+  background-color: #333;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.panel-selection select {
+  color: black; /* Black font color for select panel dropdown */
+  padding: 5px;
+  border-radius: 5px;
+  background-color: #eee;
+  border: 1px solid #444;
+  margin-bottom: 10px;
+}
+
+.panel-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  justify-items: center;
+  max-width: 800px; /* Wrap panels after four columns */
+}
+
+.panel-summary-card {
+  background-color: #181918;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.panel-summary-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.right-panel {
+  width: 60%;
+  padding: 20px;
+  background-color: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chart-statistics {
+  background-color: #333;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.line-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chart-type-select {
+  padding: 5px;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+  border: 1px solid #444;
+  margin-bottom: 20px;
+}
+
+.comparison-chart {
+  margin-top: 20px;
+}
+
+/* Style for chart title text */
+.chart-title {
+  color: white; /* White font color for chart titles */
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}

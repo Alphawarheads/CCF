@@ -4,7 +4,6 @@ const App = () => (
     <div className="gradient-bg-welcome">
       <Navbar />
       <MapSection />
-      <Welcome />
 
     </div>
     <Services />
