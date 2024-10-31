@@ -3,7 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Sidebar from "./Sidebar";
 import PanelWindows from "./PanelWindows";  // 引入 PanelWindows 组件
-import kakilogo from "../../images/kakilogo.jpg";
+import kakilogo from "../../images/kali.png";
 import "../style/MapSection.css"; // 正确引入CSS
 
 const MapSection = () => {
