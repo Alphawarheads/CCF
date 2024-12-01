@@ -1,0 +1,4 @@
+pvlib
+typing
+dotenv
+pydantic
