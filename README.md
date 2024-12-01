@@ -253,7 +253,7 @@ SolarSave-Backend/
 │   ├── main.py
 │   ├── models.py
 │   └── schemas.py
-└── requirements.txt
+└── requirements.txt 
 ```
 
 ---

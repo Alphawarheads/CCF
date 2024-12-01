@@ -7,3 +7,5 @@ export { default as Transactions } from "./Transactions";
 export { default as MapSection } from "./MapSection";
 export { default as Sidebar } from "./Sidebar";
 export { default as PanelWindows } from "./PanelWindows";
+export { default as Test } from "./Test";
+

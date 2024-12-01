@@ -4,16 +4,31 @@ import PanelWindows from "./PanelWindows";
 import "../style/SolarTrade.css";
 import Chart from "react-google-charts";
 import { AiOutlineClose } from "react-icons/ai";
+import axios from "axios";
 
 const panelsData = [
-  { id: 1, name: "Panel A", production: "5kW", batteryTemp: 25, dcPower: 120, acPower: 100 },
-  { id: 2, name: "Panel B", production: "3kW", batteryTemp: 30, dcPower: 90, acPower: 80 },
-  { id: 3, name: "Panel C", production: "4kW", batteryTemp: 28, dcPower: 110, acPower: 95 },
+  { id: 1, name: "Panel A", lat: 31.2304, lng: 121.4737 },
+  { id: 2, name: "Panel B", lat: 30.5728, lng: 104.0668 },
+  { id: 3, name: "Panel C", lat: 39.9042, lng: 116.4074 },
+  { id: 4, name: "Panel D", lat: 22.3964, lng: 114.1095 },
+  { id: 5, name: "Panel E", lat: 34.0522, lng: -118.2437 },
 ];
+
+const generateRandomData = () => {
+  const data = [];
+  for (let i = 0; i < 24; i++) {
+    const dcPower = Math.floor(Math.random() * 200) + 100; // Random DC Power between 100 and 300
+    const acPower = Math.floor(dcPower * 0.9); // AC Power is 90% of DC Power
+    data.push([`Hour ${i + 1}`, dcPower, acPower]);
+  }
+  return [["Time", "DC Power", "AC Power"], ...data];
+};
 
 const SolarTrade = ({ goBack }) => {
   const [selectedPanel, setSelectedPanel] = useState(null);
   const [panels, setPanels] = useState([]);
+  const [combinedData, setCombinedData] = useState(null); // For combined API data
+  const [loading, setLoading] = useState(false); // Loading state
   const [showTradeScript, setShowTradeScript] = useState(false);
   const [showPanelWindows, setShowPanelWindows] = useState(null);
 
@@ -21,7 +36,29 @@ const SolarTrade = ({ goBack }) => {
     if (selectedPanel) {
       setPanels([...panels, selectedPanel]);
       setSelectedPanel(null);
-      setShowTradeScript(true);
+    }
+  };
+
+  const fetchCombinedData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/run_combined_model/", {
+        coordinates: panels.map((panel) => ({ lat: panel.lat, lon: panel.lng })),
+        start_date: "2022-06-21",
+        end_date: "2022-06-22",
+        freq: "60min",
+      });
+
+      if (response.data.status === "success") {
+        setCombinedData(response.data);
+      } else {
+        console.error("Error:", response.data.message);
+      }
+    } catch (error) {
+      console.error("API call failed:", error.message);
+      setCombinedData({ details: generateRandomData() }); // Use random data as fallback
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,11 +66,20 @@ const SolarTrade = ({ goBack }) => {
     setShowPanelWindows(panel);
   };
 
+  const combinedStatistics = combinedData
+    ? {
+        acPower: combinedData.combined_ac || 0,
+        dcPower: combinedData.combined_dc || 0,
+      }
+    : { acPower: 0, dcPower: 0 };
+
   return (
     <div className="solar-trade-container">
-      <div className="left-panel">
-        <button onClick={goBack} className="back-button">Back to Services</button>
-        <h2>Solar Panel Selection</h2>
+      <div className="left-panel gradient-bg-services">
+        <button onClick={goBack} className="back-button">
+          Back to Services
+        </button>
+        <h2 className="panel-selection-title">Solar Panel Selection</h2>
         <div className="panel-selection">
           <select
             value={selectedPanel?.id || ""}
@@ -42,99 +88,68 @@ const SolarTrade = ({ goBack }) => {
                 panelsData.find((panel) => panel.id === parseInt(e.target.value))
               )
             }
+            className="panel-dropdown"
           >
             <option value="">Select a Panel</option>
             {panelsData.map((panel) => (
               <option key={panel.id} value={panel.id}>
-                {panel.name} - {panel.production}
+                {panel.name}
               </option>
             ))}
           </select>
-          <button onClick={handleAddPanel}>Add Panel</button>
+          <button onClick={handleAddPanel} className="add-panel-button">
+            Add Panel
+          </button>
         </div>
 
         <div className="panel-summary">
           {panels.map((panel) => (
-            <div key={panel.id} className="panel-summary-card" onClick={() => handleOpenPanelWindows(panel)}>
-              <p><strong>{panel.name}</strong></p>
-              <p>Battery Temp: {panel.batteryTemp}°C</p>
-              <p>DC Power: {panel.dcPower} W</p>
-              <p>AC Power: {panel.acPower} W</p>
-              <AiOutlineClose className="close-icon" onClick={() => setPanels(panels.filter(p => p.id !== panel.id))} />
+            <div
+              key={panel.id}
+              className="panel-summary-card blue-glassmorphism"
+              onClick={() => handleOpenPanelWindows(panel)}
+            >
+              <div className="panel-info">
+                <p>
+                  <strong>{panel.name}</strong>
+                </p>
+                <p>Latitude: {panel.lat}</p>
+                <p>Longitude: {panel.lng}</p>
+              </div>
+              <AiOutlineClose
+                className="close-icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPanels(panels.filter((p) => p.id !== panel.id));
+                }}
+              />
             </div>
           ))}
         </div>
+        <button onClick={fetchCombinedData} className="fetch-data-button">
+          {loading ? "Loading..." : "Fetch Combined Data"}
+        </button>
       </div>
 
       <div className="right-panel">
         <div className="chart-statistics">
-          <h3>Overall Statistics</h3>
-          <p>Battery Temp: 30°C</p>
-          <p>DC Power: 90 W</p>
-          <p>AC Power: 80 W</p>
-        </div>
-
-        <div className="line-charts">
-          <Chart
-            chartType="LineChart"
-            data={[["Time", "Battery Temp"], ["10 AM", 25], ["11 AM", 30], ["12 PM", 28]]}
-            options={{
-              title: "Battery Temperature",
-              hAxis: { title: "Time" },
-              vAxis: { title: "Temperature (°C)" },
-              colors: ["#ff6b6b"],
-              backgroundColor: "#1a1a2e",
-              legend: { position: "bottom", textStyle: { color: "#ffffff" } }
-            }}
-            width="100%"
-            height="150px"
-          />
-          <Chart
-            chartType="LineChart"
-            data={[["Time", "DC Power"], ["10 AM", 120], ["11 AM", 130], ["12 PM", 125]]}
-            options={{
-              title: "DC Power",
-              hAxis: { title: "Time" },
-              vAxis: { title: "Power (W)" },
-              colors: ["#4CAF50"],
-              backgroundColor: "#1a1a2e",
-              legend: { position: "bottom" },
-            }}
-            width="100%"
-            height="150px"
-          />
-          <Chart
-            chartType="LineChart"
-            data={[["Time", "AC Power"], ["10 AM", 100], ["11 AM", 105], ["12 PM", 110]]}
-            options={{
-              title: "AC Power",
-              hAxis: { title: "Time" },
-              vAxis: { title: "Power (W)" },
-              colors: ["#2952E3"],
-              backgroundColor: "#1a1a2e",
-              legend: { position: "bottom" },
-            }}
-            width="100%"
-            height="150px"
-          />
+          <h3>Combined Statistics</h3>
+          <p>DC Power: {combinedStatistics.dcPower} W</p>
+          <p>AC Power: {combinedStatistics.acPower} W</p>
         </div>
 
         <div className="comparison-chart">
           <Chart
             chartType="BarChart"
-            data={[
-              ["Panel", "Battery Temp", "DC Power", "AC Power"],
-              ["Panel A", 25, 120, 100],
-              ["Panel B", 30, 90, 80],
-              ["Panel C", 28, 110, 95],
-            ]}
+            data={combinedData?.details || generateRandomData()}
             options={{
-              title: "Comparison of Panel Metrics",
+              title: "Combined Output Comparison",
               backgroundColor: "#1a1a2e",
-              colors: ["#ff6b6b", "#4CAF50", "#2952E3"],
-              hAxis: { title: "Metrics" },
-              vAxis: { title: "Values" },
-              legend: { position: "right" },
+              colors: ["#4CAF50", "#2952E3"],
+              titleTextStyle: { color: "#ffffff" },
+              hAxis: { title: "Time", textStyle: { color: "#ffffff" } },
+              vAxis: { title: "Power (W)", textStyle: { color: "#ffffff" } },
+              legend: { position: "right", textStyle: { color: "#ffffff" } },
             }}
             width="100%"
             height="300px"
